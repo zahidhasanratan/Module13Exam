@@ -370,15 +370,15 @@
         <!-- Delete Author Modal -->
         <div
           class="modal fade"
-          id="deleteAuthorModal"
+          id="deleteBookModal"
           tabindex="-1"
-          aria-labelledby="deleteAuthorModalLabel"
+          aria-labelledby="deleteBookModalLabel"
           aria-hidden="true"
         >
           <div class="modal-dialog">
             <div class="modal-content">
               <div class="modal-header">
-                <h1 class="modal-title fs-5" id="deleteAuthorModalLabel">
+                <h1 class="modal-title fs-5" id="deleteBookLabel">
                   Do you wanna delete?
                 </h1>
                 <button
@@ -400,7 +400,7 @@
                   No
                 </button>
                 <button
-                  onclick="deleteAuthorFinally()"
+                  onclick="deleteBookFinally()"
                   type="button"
                   class="btn btn-primary"
                 >
@@ -486,206 +486,200 @@
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
       async function getBooks() {
-        let URL =
-          "http://localhost/ostad/Module13/part3/view/books/readBook.php";
+        let URL = "http://ostadapi.zahid.com.bd/view/books/readBook.php";
         let tableData = document.getElementById("bookList");
-
+    
         try {
-          tableData.innerHTML = "<tr><td colspan='5'>Loading...</td></tr>";
+          tableData.innerHTML = "<tr><td colspan='7'>Loading...</td></tr>";
           let response = await axios.get(URL);
           let books = response.data;
           tableData.innerHTML = "";
-
+    
           if (!books.length) {
-            tableData.innerHTML =
-              "<tr><td colspan='5'>No Author Found</td></tr>";
+            tableData.innerHTML = "<tr><td colspan='7'>No Books Found</td></tr>";
             return;
           }
-
-          books.forEach((author) => {
+    
+          books.forEach((book) => {
             let row = document.createElement("tr");
             row.innerHTML = `
-        <td>${author["book_id"]}</td>
-        <td>${author["title"]}</td>
-        <td>${author["price"]}</td>
-        <td>${author["stock_quantity"]}</td>
-        <td>${author["author_id"]}</td>
-        <td><button class="btn btn-success update-btn" data-id="${author["author_id"]}">Update</button></td>
-        <td><button class="btn btn-danger delete-btn" data-id="${author["author_id"]}">Delete</button></td>
-      `;
+              <td>${book.book_id}</td>
+              <td>${book.title}</td>
+              <td>${book.price}</td>
+              <td>${book.stock_quantity}</td>
+              <td>${book.author_id}</td>
+              <td><button class="btn btn-success update-btn" data-id="${book.book_id}">Update</button></td>
+              <td><button class="btn btn-danger delete-btn" data-id="${book.book_id}">Delete</button></td>
+            `;
             tableData.appendChild(row);
           });
-
+    
           document.querySelectorAll(".update-btn").forEach((btn) => {
             btn.addEventListener("click", function () {
               goToUpdate(this.dataset.id);
             });
           });
-
+    
           document.querySelectorAll(".delete-btn").forEach((btn) => {
             btn.addEventListener("click", function () {
-              deleteAuthor(this.dataset.id);
+              deleteBook(this.dataset.id);
             });
           });
         } catch (error) {
-          console.error("Error for books:", error);
-          tableData.innerHTML =
-            "<tr><td colspan='5'>Failed to load author</td></tr>";
+          console.error("Error fetching books:", error);
+          tableData.innerHTML = "<tr><td colspan='7'>Failed to load books</td></tr>";
         } finally {
-          console.log("Author fetch Completed");
+          console.log("Book fetch completed");
         }
       }
-
+    
       getBooks();
-
-      async function addAuthor() {
-        let URL = "https://ostadapi.zahid.com.bd/view/books/insertAuthor.php";
-        let authorName = document.getElementById("nameID").value.trim();
-        let authorEmail = document.getElementById("emailID").value.trim();
-
+    
+      async function addBook() {
+        let URL = "https://ostadapi.zahid.com.bd/view/books/insertBook.php";
+        let title = document.getElementById("titleID").value.trim();
+        let price = document.getElementById("priceID").value.trim();
+        let stock = document.getElementById("stockID").value.trim();
+        let author_id = document.getElementById("authorID").value.trim();
+    
+        if (!title || !price || !stock || !author_id) {
+          alert("All fields are required");
+          return;
+        }
+    
         try {
-          if (!authorName || !authorEmail) {
-            alert("All data required");
-            return;
-          }
-
           let formData = new FormData();
-          formData.append("name", authorName);
-          formData.append("email", authorEmail);
-
+          formData.append("title", title);
+          formData.append("price", price);
+          formData.append("stock_quantity", stock);
+          formData.append("author_id", author_id);
+    
           let response = await axios.post(URL, formData);
-
+    
           if (response.status === 200) {
-            alert("Author successfully inserted");
-            document.getElementById("nameID").value = "";
-            document.getElementById("emailID").value = "";
-
-            let modal = bootstrap.Modal.getInstance(
-              document.getElementById("addAuthorModal")
-            );
+            alert("Book successfully inserted");
+            document.getElementById("titleID").value = "";
+            document.getElementById("priceID").value = "";
+            document.getElementById("stockID").value = "";
+            document.getElementById("authorID").value = "";
+    
+            let modal = bootstrap.Modal.getInstance(document.getElementById("addBookModal"));
             modal.hide();
-
+    
             getBooks();
           } else {
-            alert("Author Adding Failed");
+            alert("Book adding failed");
           }
         } catch (error) {
-          console.error("Error for adding author", error);
+          console.error("Error adding book", error);
           alert("Failed, try again");
-        } finally {
-          console.log("Author added successfully");
         }
       }
-
-      let editAuthorID = null;
-
-      async function goToUpdate(authorID) {
-        let URL = `https://ostadapi.zahid.com.bd/view/books/getAuthorById.php?author_id=${authorID}`;
-
+    
+      let editBookID = null;
+    
+      async function goToUpdate(bookID) {
+        let URL = `https://ostadapi.zahid.com.bd/view/books/getBookById.php?book_id=${bookID}`;
+    
         try {
           let response = await axios.get(URL);
-          let authorData = response.data;
-
-          if (authorData) {
-            document.getElementById("nameIDE").value = authorData.name;
-            document.getElementById("emailIDE").value = authorData.email;
-            editAuthorID = authorID;
-
-            let editModal = new bootstrap.Modal(
-              document.getElementById("editAuthorModal")
-            );
+          let bookData = response.data;
+    
+          if (bookData) {
+            document.getElementById("titleIDE").value = bookData.title;
+            document.getElementById("priceIDE").value = bookData.price;
+            document.getElementById("stockIDE").value = bookData.stock_quantity;
+            document.getElementById("authorIDE").value = bookData.author_id;
+            editBookID = bookID;
+    
+            let editModal = new bootstrap.Modal(document.getElementById("editBookModal"));
             editModal.show();
           } else {
-            alert("Author no found");
+            alert("Book not found");
           }
         } catch (error) {
-          console.error("Text", error);
-          alert("Author Data Loading failed");
+          console.error("Error loading book data", error);
+          alert("Book data loading failed");
         }
       }
-
-      async function updateAuthor() {
-        let URL = "https://ostadapi.zahid.com.bd/view/books/updateAuthor.php";
-        let authorName = document.getElementById("nameIDE").value.trim();
-        let authorEmail = document.getElementById("emailIDE").value.trim();
-
+    
+      async function updateBook() {
+        let URL = "https://ostadapi.zahid.com.bd/view/books/updateBook.php";
+        let title = document.getElementById("titleIDE").value.trim();
+        let price = document.getElementById("priceIDE").value.trim();
+        let stock = document.getElementById("stockIDE").value.trim();
+        let author_id = document.getElementById("authorIDE").value.trim();
+    
+        if (!title || !price || !stock || !author_id) {
+          alert("All fields are required");
+          return;
+        }
+    
         try {
-          if (!authorName || !authorEmail) {
-            alert("All data required");
-            return;
-          }
-
           let formData = new FormData();
-          formData.append("author_id", editAuthorID);
-          formData.append("name", authorName);
-          formData.append("email", authorEmail);
-
+          formData.append("book_id", editBookID);
+          formData.append("title", title);
+          formData.append("price", price);
+          formData.append("stock_quantity", stock);
+          formData.append("author_id", author_id);
+    
           let response = await axios.post(URL, formData);
-
+    
           if (response.status === 200) {
-            alert("Author successfully Updated");
-            document.getElementById("nameIDE").value = "";
-            document.getElementById("emailIDE").value = "";
-
-            let modal = bootstrap.Modal.getInstance(
-              document.getElementById("editAuthorModal")
-            );
+            alert("Book successfully updated");
+    
+            let modal = bootstrap.Modal.getInstance(document.getElementById("editBookModal"));
             modal.hide();
-
+    
             getBooks();
           } else {
-            alert("Update author Failed");
+            alert("Book update failed");
           }
         } catch (error) {
-          console.error("Update author Failed", error);
-          alert("Failed, try again");
-        } finally {
-          console.log("Author has been updated successfully");
+          console.error("Error updating book", error);
+          alert("Update failed, try again");
         }
       }
-
-      let deleteAuthorID = null;
-
-      function deleteAuthor(authorID) {
-        deleteAuthorID = authorID;
-        let deleteModal = new bootstrap.Modal(
-          document.getElementById("deleteAuthorModal")
-        );
+    
+      let deleteBookID = null;
+    
+      function deleteBook(bookID) {
+        deleteBookID = bookID;
+        let deleteModal = new bootstrap.Modal(document.getElementById("deleteBookModal"));
         deleteModal.show();
       }
-
-      async function deleteAuthorFinally() {
-        let URL = "https://ostadapi.zahid.com.bd/view/books/deleteAuthor.php";
-
+    
+      async function deleteBookFinally() {
+        let URL = "https://ostadapi.zahid.com.bd/view/books/deleteBook.php";
+    
+        if (!deleteBookID) {
+          alert("Invalid ID");
+          return;
+        }
+    
         try {
-          if (!deleteAuthorID) {
-            alert("Invalid ID");
-            return;
-          }
-
           let formData = new FormData();
-          formData.append("author_id", deleteAuthorID);
-
+          formData.append("book_id", deleteBookID);
+    
           let response = await axios.post(URL, formData);
-
+    
           if (response.status === 200) {
-            alert("Success");
-
-            let modal = bootstrap.Modal.getInstance(
-              document.getElementById("deleteAuthorModal")
-            );
+            alert("Book deleted successfully");
+    
+            let modal = bootstrap.Modal.getInstance(document.getElementById("deleteBookModal"));
             modal.hide();
-
+    
             getBooks();
           } else {
-            alert("Failed to Delete");
+            alert("Failed to delete");
           }
         } catch (error) {
-          console.error("Test ", error);
-          alert("Delete Failed, Please Try Again");
+          console.error("Error deleting book", error);
+          alert("Delete failed, try again");
         }
       }
     </script>
+    
     <!--end::Script-->
   </body>
   <!--end::Body-->
