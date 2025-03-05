@@ -3,7 +3,7 @@
   <!--begin::Head-->
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Author Management | Online Book Store</title>
+    <title>Book | Online Book Store</title>
     <!--begin::Primary Meta Tags-->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="title" content="AdminLTE | Dashboard v2" />
@@ -72,7 +72,7 @@
               </a>
             </li>
             <li class="nav-item d-none d-md-block">
-              <a href="#" class="nav-link">Author Management</a>
+              <a href="#" class="nav-link">Book</a>
             </li>
           </ul>
           <!--end::Start Navbar Links-->
@@ -175,7 +175,7 @@
               <li class="nav-item">
                 <a href="./author.html" class="nav-link active">
                   <i class="nav-icon bi bi-speedometer"></i>
-                  <p>Author Management</p>
+                  <p>Book</p>
                 </a>
               </li>
 
@@ -220,7 +220,7 @@
             <!--begin::Row-->
             <div class="row">
               <div class="col-sm-10">
-                <h3 class="mb-0">Author Management</h3>
+                <h3 class="mb-0">All Bok</h3>
               </div>
               <div class="col-2">
                 <button
@@ -239,13 +239,15 @@
                   <thead>
                     <tr>
                       <th scope="col">ID</th>
-                      <th scope="col">Name</th>
-                      <th scope="col">Email</th>
+                      <th scope="col">Title</th>
+                      <th scope="col">Price</th>
+                      <th scope="col">Quantity</th>
+                      <th scope="col">Author Name</th>
                       <th scope="col">Update</th>
                       <th scope="col">Delete</th>
                     </tr>
                   </thead>
-                  <tbody id="authorList"></tbody>
+                  <tbody id="bookList"></tbody>
                 </table>
               </div>
             </div>
@@ -483,9 +485,10 @@
 
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
-      async function getAuthors() {
-        let URL = "https://ostadapi.zahid.com.bd/view/authors/readAuthors.php";
-        let tableData = document.getElementById("authorList");
+      async function getBooks() {
+        let URL =
+          "http://localhost/ostad/Module13/part3/view/books/readBook.php";
+        let tableData = document.getElementById("bookList");
 
         try {
           tableData.innerHTML = "<tr><td colspan='5'>Loading...</td></tr>";
@@ -531,10 +534,10 @@
         }
       }
 
-      getAuthors();
+      getBooks();
 
       async function addAuthor() {
-        let URL = "https://ostadapi.zahid.com.bd/view/authors/insertAuthor.php";
+        let URL = "https://bs-api.sobuj.net/view/authors/insertAuthor.php";
         let authorName = document.getElementById("nameID").value.trim();
         let authorEmail = document.getElementById("emailID").value.trim();
 
@@ -560,7 +563,7 @@
             );
             modal.hide();
 
-            getAuthors();
+            getBooks();
           } else {
             alert("Author Adding Failed");
           }
@@ -575,7 +578,7 @@
       let editAuthorID = null;
 
       async function goToUpdate(authorID) {
-        let URL = `https://ostadapi.zahid.com.bd/view/authors/getAuthorById.php?author_id=${authorID}`;
+        let URL = `https://bs-api.sobuj.net/view/authors/getAuthorById.php?author_id=${authorID}`;
 
         try {
           let response = await axios.get(URL);
@@ -600,7 +603,7 @@
       }
 
       async function updateAuthor() {
-        let URL = "https://ostadapi.zahid.com.bd/view/authors/updateAuthor.php";
+        let URL = "https://bs-api.sobuj.net/view/authors/updateAuthor.php";
         let authorName = document.getElementById("nameIDE").value.trim();
         let authorEmail = document.getElementById("emailIDE").value.trim();
 
@@ -627,7 +630,7 @@
             );
             modal.hide();
 
-            getAuthors();
+            getBooks();
           } else {
             alert("Update author Failed");
           }
@@ -650,7 +653,7 @@
       }
 
       async function deleteAuthorFinally() {
-        let URL = "https://ostadapi.zahid.com.bd/view/authors/deleteAuthor.php";
+        let URL = "https://bs-api.sobuj.net/view/authors/deleteAuthor.php";
 
         try {
           if (!deleteAuthorID) {
@@ -671,7 +674,7 @@
             );
             modal.hide();
 
-            getAuthors();
+            getBooks();
           } else {
             alert("Failed to Delete");
           }

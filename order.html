@@ -72,7 +72,7 @@
               </a>
             </li>
             <li class="nav-item d-none d-md-block">
-              <a href="#" class="nav-link">Home</a>
+              <a href="#" class="nav-link">Order Management</a>
             </li>
           </ul>
           <!--end::Start Navbar Links-->
@@ -167,7 +167,7 @@
               data-accordion="false"
             >
               <li class="nav-item">
-                <a href="./summary.html" class="nav-link">
+                <a href="./index.html" class="nav-link">
                   <i class="nav-icon bi bi-speedometer"></i>
                   <p>Dashboard</p>
                 </a>
@@ -514,7 +514,7 @@
     <script>
       //  Get Order List
       async function getOrders() {
-        const URL = "https://bs-api.sobuj.net/view/orders/readOrders.php";
+        const URL = "https://ostadapi.zahid.com.bd/view/orders/readOrders.php";
         let tableData = document.getElementById("orderList");
 
         try {
@@ -574,7 +574,7 @@
       // View Order Details
       async function viewOrderDetails(orderId) {
         try {
-          const URL = `https://bs-api.sobuj.net/view/orders/getOrderById.php?order_id=${orderId}`;
+          const URL = `https://ostadapi.zahid.com.bd/view/orders/getOrderById.php?order_id=${orderId}`;
 
           // Getting Single Order Details
           let orderResponse = await axios.get(URL);
@@ -598,7 +598,7 @@
 
           for (let item of orderData.order_details) {
             let bookResponse = await axios.get(
-              `https://bs-api.sobuj.net/view/books/getBookById.php?book_id=${item.book_id}`
+              `https://ostadapi.zahid.com.bd/view/books/getBookById.php?book_id=${item.book_id}`
             );
 
             let book = bookResponse.data;
@@ -643,7 +643,7 @@
 
       // Final order delete
       async function deleteOrderFinally() {
-        const URL = "https://bs-api.sobuj.net/view/orders/deleteOrder.php";
+        const URL = "https://ostadapi.zahid.com.bd/view/orders/deleteOrder.php";
 
         try {
           // Check if the deleteOrder is valid
@@ -692,7 +692,7 @@
       async function fetchCustomers() {
         let customerSelect = document.getElementById("customerSelect");
         const customerURL =
-          "https://bs-api.sobuj.net/view/customers/readCustomers.php";
+          "https://ostadapi.zahid.com.bd/view/customers/readCustomers.php";
         try {
           let response = await axios.get(customerURL);
           customersData = response.data;
@@ -712,7 +712,8 @@
       // Fetch Books
       async function fetchBooks() {
         try {
-          const booksURL = "https://bs-api.sobuj.net/view/books/readBook.php";
+          const booksURL =
+            "https://ostadapi.zahid.com.bd/view/books/readBook.php";
           let response = await axios.get(booksURL);
           booksData = response.data;
         } catch (e) {
@@ -813,7 +814,7 @@
         // Sending Create API Request
         try {
           const createOrderURL =
-            "https://bs-api.sobuj.net/view/orders/insertOrder.php";
+            "https://ostadapi.zahid.com.bd/view/orders/insertOrder.php";
 
           let response = await axios.post(createOrderURL, orderData, {
             headers: {
