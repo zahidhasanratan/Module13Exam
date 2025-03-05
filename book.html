@@ -493,21 +493,23 @@
         try {
           tableData.innerHTML = "<tr><td colspan='5'>Loading...</td></tr>";
           let response = await axios.get(URL);
-          let authors = response.data;
+          let books = response.data;
           tableData.innerHTML = "";
 
-          if (!authors.length) {
+          if (!books.length) {
             tableData.innerHTML =
               "<tr><td colspan='5'>No Author Found</td></tr>";
             return;
           }
 
-          authors.forEach((author) => {
+          books.forEach((author) => {
             let row = document.createElement("tr");
             row.innerHTML = `
+        <td>${author["book_id"]}</td>
+        <td>${author["title"]}</td>
+        <td>${author["price"]}</td>
+        <td>${author["stock_quantity"]}</td>
         <td>${author["author_id"]}</td>
-        <td>${author["name"]}</td>
-        <td>${author["email"]}</td>
         <td><button class="btn btn-success update-btn" data-id="${author["author_id"]}">Update</button></td>
         <td><button class="btn btn-danger delete-btn" data-id="${author["author_id"]}">Delete</button></td>
       `;
@@ -526,7 +528,7 @@
             });
           });
         } catch (error) {
-          console.error("Error for authors:", error);
+          console.error("Error for books:", error);
           tableData.innerHTML =
             "<tr><td colspan='5'>Failed to load author</td></tr>";
         } finally {
@@ -537,7 +539,7 @@
       getBooks();
 
       async function addAuthor() {
-        let URL = "https://bs-api.sobuj.net/view/authors/insertAuthor.php";
+        let URL = "https://ostadapi.zahid.com.bd/view/books/insertAuthor.php";
         let authorName = document.getElementById("nameID").value.trim();
         let authorEmail = document.getElementById("emailID").value.trim();
 
@@ -578,7 +580,7 @@
       let editAuthorID = null;
 
       async function goToUpdate(authorID) {
-        let URL = `https://bs-api.sobuj.net/view/authors/getAuthorById.php?author_id=${authorID}`;
+        let URL = `https://ostadapi.zahid.com.bd/view/books/getAuthorById.php?author_id=${authorID}`;
 
         try {
           let response = await axios.get(URL);
@@ -603,7 +605,7 @@
       }
 
       async function updateAuthor() {
-        let URL = "https://bs-api.sobuj.net/view/authors/updateAuthor.php";
+        let URL = "https://ostadapi.zahid.com.bd/view/books/updateAuthor.php";
         let authorName = document.getElementById("nameIDE").value.trim();
         let authorEmail = document.getElementById("emailIDE").value.trim();
 
@@ -653,7 +655,7 @@
       }
 
       async function deleteAuthorFinally() {
-        let URL = "https://bs-api.sobuj.net/view/authors/deleteAuthor.php";
+        let URL = "https://ostadapi.zahid.com.bd/view/books/deleteAuthor.php";
 
         try {
           if (!deleteAuthorID) {
