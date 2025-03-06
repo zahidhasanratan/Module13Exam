@@ -3,7 +3,7 @@
   <!--begin::Head-->
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Author Management | Online Book Store</title>
+    <title>Book Management | Online Book Store</title>
     <!--begin::Primary Meta Tags-->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="title" content="AdminLTE | Dashboard v2" />
@@ -72,7 +72,7 @@
               </a>
             </li>
             <li class="nav-item d-none d-md-block">
-              <a href="#" class="nav-link">Author Management</a>
+              <a href="#" class="nav-link">Book Management</a>
             </li>
           </ul>
           <!--end::Start Navbar Links-->
@@ -220,13 +220,13 @@
             <!--begin::Row-->
             <div class="row">
               <div class="col-sm-10">
-                <h3 class="mb-0">Author Management</h3>
+                <h3 class="mb-0">Book Management</h3>
               </div>
               <div class="col-2">
                 <button
                   class="btn btn-primary"
                   data-bs-toggle="modal"
-                  data-bs-target="#addAuthorModal"
+                  data-bs-target="#addBookModal"
                 >
                   Add New
                 </button>
@@ -263,57 +263,63 @@
           <!--end::Container-->
         </div>
 
-        <!-- Add Author Modal -->
-        <div
-          class="modal fade modal-lg"
-          id="addAuthorModal"
-          tabindex="-1"
-          aria-labelledby="addAuthorModalLabel"
-          aria-hidden="true"
-        >
-          <div class="modal-dialog">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h1 class="modal-title fs-5" id="addAuthorModalLabel">
-                  Add New Author
-                </h1>
-                <button
-                  type="button"
-                  class="btn-close"
-                  data-bs-dismiss="modal"
-                  aria-label="Close"
-                ></button>
-              </div>
-              <div class="modal-body">
-                <div class="mb-3">
-                  <label class="form-label">Author Name</label>
-                  <input type="text" class="form-control" id="nameID" />
-                </div>
+      
+<!-- Add Book Modal -->
+<div
+  class="modal fade modal-lg"
+  id="addBookModal"
+  tabindex="-1"
+  aria-labelledby="addBookModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="addBookModalLabel">
+          Add New Book
+        </h1>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Book Name</label>
+          <input type="text" class="form-control" id="nameID" />
 
-                <div class="mb-3">
-                  <label class="form-label">Author Email</label>
-                  <input type="email" class="form-control" id="emailID" />
-                </div>
-              </div>
-              <div class="modal-footer">
-                <button
-                  type="button"
-                  class="btn btn-secondary"
-                  data-bs-dismiss="modal"
-                >
-                  Close
-                </button>
-                <button
-                  onclick="addAuthor()"
-                  type="button"
-                  class="btn btn-primary"
-                >
-                  Save
-                </button>
-              </div>
-            </div>
-          </div>
+          <label class="form-label">Price</label>
+          <input type="text" class="form-control" id="priceID" />
+          
+          <label class="form-label">Stock Quantity</label>
+          <input type="text" class="form-control" id="stockID" />
+
+          <label class="form-label">Author ID</label>
+          <input type="text" class="form-control" id="authorID" />
         </div>
+      </div>
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          data-bs-dismiss="modal"
+        >
+          Close
+        </button>
+        <button
+          onclick="addBook()"
+          type="button"
+          class="btn btn-primary"
+        >
+          Save
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 
         <!-- Edit Author Modal -->
         <div
@@ -537,6 +543,57 @@
         // Initial call to populate the table
         getBook();
       
+        async function addBook() {
+    let URL = "https://ostadapi.zahid.com.bd/view/books/insertBook.php";
+    let booknameID = document.getElementById("nameID").value.trim();
+    let bookpriceID = document.getElementById("priceID").value.trim();
+    let bookstockID = document.getElementById("stockID").value.trim();
+    let bookAuthorId = document.getElementById("authorID").value.trim();
+
+    console.log({
+        title: booknameID,
+        price: bookpriceID,
+        stock_quantity: bookstockID,
+        author_id: bookAuthorId
+    });  // Log the data to check if it's correct
+
+    try {
+        if (!booknameID || !bookpriceID || !bookstockID || !bookAuthorId) {
+            alert("All data required");
+            return;
+        }
+
+        let formData = new FormData();
+        formData.append("title", booknameID);
+        formData.append("price", bookpriceID);
+        formData.append("stock_qty", bookstockID);
+        formData.append("author_id", bookAuthorId);
+
+        let response = await axios.post(URL, formData);
+
+        console.log(response);  // Log the response
+
+        if (response.status === 200) {
+            alert("Book successfully inserted");
+            document.getElementById("nameID").value = "";
+            document.getElementById("priceID").value = "";
+            document.getElementById("stockID").value = "";
+            document.getElementById("authorID").value = "";
+
+            let modal = bootstrap.Modal.getInstance(document.getElementById("addBookModal"));
+            modal.hide();
+            getBook();  // Refresh the book list
+        } else {
+            alert("Failed to add the book");
+        }
+    } catch (error) {
+        console.error("Error adding book", error);
+        alert("Failed, try again");
+    } finally {
+        console.log("Book added attempt completed");
+    }
+}
+
         // Variable to store the book ID to delete
         let deleteBookID = null;
       
@@ -599,6 +656,9 @@
           }
         }
       </script>
+
+
+
     <!--end::Script-->
   </body>
   <!--end::Body-->
