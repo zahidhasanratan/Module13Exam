@@ -173,14 +173,14 @@
               </li>
 
               <li class="nav-item">
-                <a href="./author.html" class="nav-link active">
+                <a href="./author.html" class="nav-link">
                   <i class="nav-icon bi bi-speedometer"></i>
                   <p>Author Management</p>
                 </a>
               </li>
 
               <li class="nav-item">
-                <a href="./book.html" class="nav-link">
+                <a href="./book.html" class="nav-link active">
                   <i class="nav-icon bi bi-speedometer"></i>
                   <p>Book</p>
                 </a>
@@ -408,7 +408,7 @@
                 ></button>
               </div>
               <div class="modal-body">
-                <p>Once you delete can not retrive !</p>
+                <p>Once you delete, you cannot retrieve it!</p>
               </div>
               <div class="modal-footer">
                 <button
@@ -509,6 +509,8 @@
         fetchAuthor();
       });
 
+      let deleteBookID = null; // Define globally to store the book ID for deletion
+
       async function fetchAuthor() {
         let authorSelect = document.getElementById("authorSelect");
         let authorEditSelect = document.getElementById("authorIDE");
@@ -534,70 +536,54 @@
       }
 
       async function getBook() {
-        let bookURL = "https://ostadapi.zahid.com.bd/view/books/readBook.php";
-        let authorURL =
-          "https://ostadapi.zahid.com.bd/view/authors/readAuthors.php";
+        let URL = "https://ostadapi.zahid.com.bd/view/books/readBook.php";
         let tableData = document.getElementById("bookList");
 
         try {
-          tableData.innerHTML = "<tr><td colspan='6'>Loading...</td></tr>";
-
-          let [bookResponse, authorResponse] = await Promise.all([
-            axios.get(bookURL),
-            axios.get(authorURL),
-          ]);
-
-          let books = bookResponse.data;
-          let authors = authorResponse.data;
-
-          // Create a map of authors for quick lookup
-          let authorMap = {};
-          if (Array.isArray(authors)) {
-            authors.forEach((author) => {
-              authorMap[author.author_id] = author.name; // Map author_id to author name
-            });
-          }
-
-          tableData.innerHTML = "";
-
-          if (!books.length) {
-            tableData.innerHTML = "<tr><td colspan='6'>No Book Found</td></tr>";
-            return;
-          }
+          tableData.innerHTML = "<tr><td colspan='7'>Loading...</td></tr>";
+          let response = await axios.get(URL);
+          let books = response.data;
+          tableData.innerHTML = books.length
+            ? ""
+            : "<tr><td colspan='7'>No Books Found</td></tr>";
 
           books.forEach((book) => {
-            let authorName = authorMap[book.author_id] || "Unknown"; // Get author name or show "Unknown"
             let row = document.createElement("tr");
             row.innerHTML = `
-                <td>${book.book_id}</td>
-                <td>${book.title}</td>
-                <td>${book.price}</td>
-                <td>${book.stock_quantity}</td>
-                <td>${authorName}</td>  <!-- Now showing Author Name -->
-                <td><button class="btn btn-success update-btn" data-id="${book.book_id}">Update</button></td>
-                <td><button class="btn btn-danger delete-btn" data-id="${book.book_id}">Delete</button></td>
+              <td>${book.book_id}</td>
+              <td>${book.title}</td>
+              <td>${book.price}</td>
+              <td>${book.stock_quantity}</td>
+              <td>${book.author_id}</td>
+              <td><button class="btn btn-success update-btn" data-id="${book.book_id}">Update</button></td>
+              <td><button class="btn btn-danger delete-btn" data-id="${book.book_id}">Delete</button></td>
             `;
             tableData.appendChild(row);
           });
 
-          // Attach event listeners to buttons
-          document.querySelectorAll(".delete-btn").forEach((btn) => {
-            btn.addEventListener("click", function () {
-              deleteBook(this.dataset.id);
-            });
-          });
+          // Add event listeners for delete buttons
+          document.querySelectorAll(".delete-btn").forEach((btn) =>
+            btn.addEventListener("click", () => {
+              // Set the deleteBookID to the ID of the book clicked
+              deleteBookID = btn.dataset.id;
+              // Show the delete modal
+              let deleteModal = new bootstrap.Modal(
+                document.getElementById("deleteBookModal")
+              );
+              deleteModal.show();
+            })
+          );
 
-          document.querySelectorAll(".update-btn").forEach((btn) => {
-            btn.addEventListener("click", function () {
-              goToUpdate(this.dataset.id);
-            });
-          });
+          // Add event listeners for update buttons
+          document
+            .querySelectorAll(".update-btn")
+            .forEach((btn) =>
+              btn.addEventListener("click", () => goToUpdate(btn.dataset.id))
+            );
         } catch (error) {
           console.error("Error fetching books:", error);
           tableData.innerHTML =
-            "<tr><td colspan='6'>Failed to load books</td></tr>";
-        } finally {
-          console.log("Book fetch completed");
+            "<tr><td colspan='7'>Failed to load books</td></tr>";
         }
       }
 
@@ -773,11 +759,15 @@
           let formData = new FormData();
           formData.append("book_id", deleteBookID);
           let response = await axios.post(URL, formData);
+
           if (response.status === 200) {
             alert("Book deleted successfully");
-            bootstrap.Modal.getInstance(
+            // Hide the modal after successful deletion
+            let deleteModal = bootstrap.Modal.getInstance(
               document.getElementById("deleteBookModal")
-            ).hide();
+            );
+            deleteModal.hide();
+            // Refresh the book list
             getBook();
           } else {
             alert("Failed to delete book");
