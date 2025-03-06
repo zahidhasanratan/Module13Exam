@@ -326,7 +326,6 @@
         </div>
 
         <!-- Edit Book Modal -->
-        <!-- Edit Book Modal -->
         <div
           class="modal fade modal-lg"
           id="editBookModal"
@@ -361,8 +360,10 @@
                   <input type="number" class="form-control" id="stockIDE" />
                 </div>
                 <div class="mb-3">
-                  <label class="form-label">Author ID</label>
-                  <input type="number" class="form-control" id="authorIDE" />
+                  <label class="form-label">Author</label>
+                  <select id="authorIDE" class="form-select" required>
+                    <option value="">Loading Authors...</option>
+                  </select>
                 </div>
               </div>
               <div class="modal-footer">
@@ -533,45 +534,70 @@
       }
 
       async function getBook() {
-        let URL = "https://ostadapi.zahid.com.bd/view/books/readBook.php";
+        let bookURL = "https://ostadapi.zahid.com.bd/view/books/readBook.php";
+        let authorURL =
+          "https://ostadapi.zahid.com.bd/view/authors/readAuthors.php";
         let tableData = document.getElementById("bookList");
 
         try {
-          tableData.innerHTML = "<tr><td colspan='7'>Loading...</td></tr>";
-          let response = await axios.get(URL);
-          let books = response.data;
-          tableData.innerHTML = books.length
-            ? ""
-            : "<tr><td colspan='7'>No Books Found</td></tr>";
+          tableData.innerHTML = "<tr><td colspan='6'>Loading...</td></tr>";
+
+          let [bookResponse, authorResponse] = await Promise.all([
+            axios.get(bookURL),
+            axios.get(authorURL),
+          ]);
+
+          let books = bookResponse.data;
+          let authors = authorResponse.data;
+
+          // Create a map of authors for quick lookup
+          let authorMap = {};
+          if (Array.isArray(authors)) {
+            authors.forEach((author) => {
+              authorMap[author.author_id] = author.name; // Map author_id to author name
+            });
+          }
+
+          tableData.innerHTML = "";
+
+          if (!books.length) {
+            tableData.innerHTML = "<tr><td colspan='6'>No Book Found</td></tr>";
+            return;
+          }
 
           books.forEach((book) => {
+            let authorName = authorMap[book.author_id] || "Unknown"; // Get author name or show "Unknown"
             let row = document.createElement("tr");
             row.innerHTML = `
-        <td>${book.book_id}</td>
-        <td>${book.title}</td>
-        <td>${book.price}</td>
-        <td>${book.stock_quantity}</td>
-        <td>${book.author_id}</td>
-        <td><button class="btn btn-success update-btn" data-id="${book.book_id}">Update</button></td>
-        <td><button class="btn btn-danger delete-btn" data-id="${book.book_id}">Delete</button></td>
-      `;
+                <td>${book.book_id}</td>
+                <td>${book.title}</td>
+                <td>${book.price}</td>
+                <td>${book.stock_quantity}</td>
+                <td>${authorName}</td>  <!-- Now showing Author Name -->
+                <td><button class="btn btn-success update-btn" data-id="${book.book_id}">Update</button></td>
+                <td><button class="btn btn-danger delete-btn" data-id="${book.book_id}">Delete</button></td>
+            `;
             tableData.appendChild(row);
           });
 
-          document
-            .querySelectorAll(".delete-btn")
-            .forEach((btn) =>
-              btn.addEventListener("click", () => deleteBook(btn.dataset.id))
-            );
-          document
-            .querySelectorAll(".update-btn")
-            .forEach((btn) =>
-              btn.addEventListener("click", () => goToUpdate(btn.dataset.id))
-            );
+          // Attach event listeners to buttons
+          document.querySelectorAll(".delete-btn").forEach((btn) => {
+            btn.addEventListener("click", function () {
+              deleteBook(this.dataset.id);
+            });
+          });
+
+          document.querySelectorAll(".update-btn").forEach((btn) => {
+            btn.addEventListener("click", function () {
+              goToUpdate(this.dataset.id);
+            });
+          });
         } catch (error) {
           console.error("Error fetching books:", error);
           tableData.innerHTML =
-            "<tr><td colspan='7'>Failed to load books</td></tr>";
+            "<tr><td colspan='6'>Failed to load books</td></tr>";
+        } finally {
+          console.log("Book fetch completed");
         }
       }
 
@@ -632,24 +658,51 @@
         }
       }
 
+      let editBookID = null; // Define it globally
+
       async function goToUpdate(bookID) {
-        let URL = `https://ostadapi.zahid.com.bd/view/books/getBookById.php?book_id=${bookID}`;
+        let bookURL = `https://ostadapi.zahid.com.bd/view/books/getBookById.php?book_id=${bookID}`;
+        let authorURL =
+          "https://ostadapi.zahid.com.bd/view/authors/readAuthors.php";
 
         try {
-          let response = await axios.get(URL);
-          let bookData = response.data;
-          if (!bookData) throw new Error("Book not found");
+          let [bookResponse, authorResponse] = await Promise.all([
+            axios.get(bookURL),
+            axios.get(authorURL),
+          ]);
 
-          document.getElementById("nameIDE").value = bookData.title;
-          document.getElementById("priceIDE").value = bookData.price;
-          document.getElementById("stockIDE").value = bookData.stock_quantity;
-          document.getElementById("authorIDE").value = bookData.author_id;
+          let bookData = bookResponse.data;
+          let authorsData = authorResponse.data;
 
-          editBookID = bookID;
-          new bootstrap.Modal(document.getElementById("editBookModal")).show();
+          if (bookData && Array.isArray(authorsData)) {
+            // Assign the book ID to the global variable
+            editBookID = bookID;
+
+            document.getElementById("nameIDE").value = bookData.title;
+            document.getElementById("priceIDE").value = bookData.price;
+            document.getElementById("stockIDE").value = bookData.stock_quantity;
+
+            // Populate Author Dropdown
+            let authorSelect = document.getElementById("authorIDE");
+            authorSelect.innerHTML = `<option value="">Select an Author</option>`;
+            authorsData.forEach((author) => {
+              authorSelect.innerHTML += `<option value="${author.author_id}">${author.name} - ${author.email}</option>`;
+            });
+
+            // Set the selected author
+            authorSelect.value = bookData.author_id;
+
+            // Show the modal
+            let editModal = new bootstrap.Modal(
+              document.getElementById("editBookModal")
+            );
+            editModal.show();
+          } else {
+            alert("Book data or authors not found.");
+          }
         } catch (error) {
-          console.error("Error loading book data", error);
-          alert("Failed to load book data");
+          console.error("Error fetching book details:", error);
+          alert("Book data loading failed.");
         }
       }
 
@@ -660,8 +713,13 @@
         let bookStock = document.getElementById("stockIDE").value.trim();
         let bookAuthorId = document.getElementById("authorIDE").value.trim();
 
+        if (!editBookID) {
+          alert("Error: No book selected for update.");
+          return;
+        }
+
         if (!bookName || !bookPrice || !bookStock || !bookAuthorId) {
-          alert("All fields are required");
+          alert("All fields are required.");
           return;
         }
 
@@ -674,19 +732,33 @@
           formData.append("author_id", bookAuthorId);
 
           let response = await axios.post(URL, formData);
-          if (response.status === 200) {
+
+          if (
+            response.status === 200 &&
+            response.data?.message === "Book updated successfully"
+          ) {
             alert("Book successfully updated");
-            document.getElementById("editBookForm").reset();
-            bootstrap.Modal.getInstance(
+
+            // Close the modal
+            let modal = bootstrap.Modal.getInstance(
               document.getElementById("editBookModal")
-            ).hide();
+            );
+            modal.hide();
+
+            // Refresh book list
             getBook();
           } else {
-            alert("Update book failed");
+            alert(
+              "Failed to update the book. Server response: " +
+                response.data?.message
+            );
           }
         } catch (error) {
-          console.error("Error updating book", error);
-          alert("Failed, try again");
+          console.error("Error updating book:", error);
+          alert(
+            "Update failed. Error: " +
+              (error.response?.data?.message || error.message)
+          );
         }
       }
 
